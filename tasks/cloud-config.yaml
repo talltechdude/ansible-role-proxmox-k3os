@@ -1,16 +1,14 @@
----
-
 - name: Ensure folder exist
   delegate_to: "{{ pve_host }}"
   file:
     path: "{{ pve_snippets_path }}"
     state: directory
   tags:
-  - config
+    - config
 - name: Fill cloud-config template
   delegate_to: "{{ pve_host }}"
   template:
     src: "k3os-cloud-config.yaml.j2"
     dest: "{{ pve_snippets_path }}/{{ inventory_hostname }}.yaml"
   tags:
-  - config
+    - config

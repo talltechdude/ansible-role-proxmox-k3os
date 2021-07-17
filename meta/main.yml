@@ -1,5 +1,6 @@
 galaxy_info:
   role_name: proxmox_k3os
+  namespace: talltechdude
   author: TallTechDude
   description: Builds a K3os cluster on Proxmox
   company: TallTechDude

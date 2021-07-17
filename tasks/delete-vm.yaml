@@ -1,4 +1,3 @@
-
 - name: 'K3os | Stop VM'
   delegate_to: localhost
   community.general.proxmox_kvm:
@@ -10,9 +9,9 @@
     proxmox_default_behavior: no_defaults
     vmid: "{{ vmid | default(omit) }}"
     state: stopped
-  ignore_errors: yes
+  ignore_errors: true
   tags:
-  - clean
+    - clean
 - name: 'K3os | Delete VM'
   delegate_to: localhost
   community.general.proxmox_kvm:
@@ -25,6 +24,6 @@
     vmid: "{{ vmid | default(omit) }}"
     state: absent
     force: true
-  ignore_errors: yes
+  ignore_errors: true
   tags:
-  - clean
+    - clean

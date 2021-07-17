@@ -1,5 +1,3 @@
-
-
 - name: K3os | Get IP Address
   delegate_to: "{{ pve_host }}"
   run_once: true
@@ -10,7 +8,7 @@
   delay: 10
   until: network.rc == 0
   tags:
-  - info
+    - info
 
 - name: K3os | Find eth0
   set_fact:
@@ -19,7 +17,7 @@
   run_once: true
   loop: "{{ (network.stdout | from_json).result }}"
   tags:
-  - info  
+    - info
 
 - name: K3os | Find ipv4 address
   set_fact:
@@ -28,4 +26,4 @@
   loop: "{{ addresses }}"
   run_once: true
   tags:
-  - info
+    - info
