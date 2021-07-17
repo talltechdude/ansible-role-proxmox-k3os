@@ -1,0 +1,32 @@
+
+- name: 'K3os | Create VM'
+  delegate_to: localhost
+  community.general.proxmox_kvm:
+    api_user: "{{ pve_api_user }}"
+    api_password: "{{ pve_api_password }}"
+    api_host: "{{ pve_api_host }}"
+    name: "{{ inventory_hostname }}"
+    node: "{{ pve_host | default(groups['proxmox'][0]) }}"
+    proxmox_default_behavior: no_defaults
+    vmid: "{{ vmid | default(omit) }}"
+    agent: yes
+    ide:
+      ide0: "{{ templates }}:iso/{{ k3os_iso }}.iso,media=cdrom"
+      ide2: "{{ storage }}:cloudinit,format=qcow2"
+
+    sockets: "{{ sockets }}"
+    memory: "{{ memory }}"
+    scsihw: virtio-scsi-pci
+    cicustom: "user={{templates}}:snippets/{{ inventory_hostname }}.yaml"
+
+    net:
+      net0: "virtio,bridge={{ bridge }},tag={{ vlan }}"
+    virtio: 
+      virtio0: "{{ storage }}:{{ disk_size }}"
+    pool: "{{ pool | default(omit) }}"
+  register: vmcreate_result
+- name: K3os | Waiting 10s...
+  delegate_to: localhost
+  wait_for:
+    timeout: 10
+  when: vmcreate_result.changed    

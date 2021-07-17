@@ -1,0 +1,65 @@
+#cloud-config
+ssh_authorized_keys:
+{% for public_key in ssh_public_keys %}
+  - {{ public_key }}
+{% endfor %}
+
+hostname: "{{ inventory_hostname }}"
+
+write_files:
+  ## Configure QEMU Agent
+- path: /etc/conf.d/qemu-guest-agent
+  content: |-
+    GA_PATH=/dev/vport1p1
+  owner: root
+  permissions: '0644'
+
+{% if static_ip %}
+  ## Set static IP
+- path: /var/lib/connman/default.config
+  content: |-
+    [service_eth0]
+    Type=ethernet
+    IPv4={{ ansible_host }}/255.255.255.0/{{ gateway }}
+    IPv6=off
+    Nameservers={{ nameservers }}
+{% endif %}
+
+k3os:
+  # modules:
+  # - kvm
+  sysctl:
+    kernel.printk: "4 4 1 7"
+    kernel.kptr_restrict: "1"  
+
+  labels:
+    k3os.io/upgrade: enabled
+
+  token: "{{ k3os_token }}"
+
+{% if inventory_hostname == ansible_play_hosts_all[0] %}
+  # First manager node
+  k3s_args:
+  - server
+  - --cluster-init
+  - --node-external-ip={{ ansible_host }}
+  - --tls-san={{ ansible_host }}
+  - --with-node-id
+{% elif ansible_play_hosts_all.index(inventory_hostname) < 3 %}
+  # Extra manager node
+  k3s_args:
+  - server
+  - --server=https://{{ hostvars[ansible_play_hosts_all[0]]['ansible_host'] }}:6443
+  - --with-node-id
+{% else %}
+  # Worker nodes
+  server_url: https://{{ hostvars[ansible_play_hosts_all[0]]['ansible_host'] }}:6443
+  k3s_args:
+  - --with-node-id
+{% endif %}
+
+{% if (ansible_play_hosts_all | length) > 3 and ansible_play_hosts_all.index(inventory_hostname) < 3 %}
+  # More than 3 node, keep first three for control only
+  taints:
+  - CriticalAddonsOnly=true:NoExecute
+{% endif %}

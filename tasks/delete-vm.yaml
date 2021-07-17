@@ -1,0 +1,30 @@
+
+- name: 'K3os | Stop VM'
+  delegate_to: localhost
+  community.general.proxmox_kvm:
+    api_user: "{{ pve_api_user }}"
+    api_password: "{{ pve_api_password }}"
+    api_host: "{{ pve_api_host }}"
+    name: "{{ inventory_hostname }}"
+    node: "{{ pve_host | default(groups['proxmox'][0]) }}"
+    proxmox_default_behavior: no_defaults
+    vmid: "{{ vmid | default(omit) }}"
+    state: stopped
+  ignore_errors: yes
+  tags:
+  - clean
+- name: 'K3os | Delete VM'
+  delegate_to: localhost
+  community.general.proxmox_kvm:
+    api_user: "{{ pve_api_user }}"
+    api_password: "{{ pve_api_password }}"
+    api_host: "{{ pve_api_host }}"
+    name: "{{ inventory_hostname }}"
+    node: "{{ pve_host | default(groups['proxmox'][0]) }}"
+    proxmox_default_behavior: no_defaults
+    vmid: "{{ vmid | default(omit) }}"
+    state: absent
+    force: true
+  ignore_errors: yes
+  tags:
+  - clean

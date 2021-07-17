@@ -1,0 +1,34 @@
+
+- name: K3os | Start VM
+  delegate_to: localhost
+  community.general.proxmox_kvm:
+    api_host    : "{{ pve_api_host }}"
+    api_user    : "{{ pve_api_user }}"
+    api_password: "{{ pve_api_password }}"
+    node        : "{{ pve_host }}"
+    name        : "{{ inventory_hostname }}"
+    proxmox_default_behavior: no_defaults
+    cicustom    : "user={{templates}}:snippets/{{ inventory_hostname }}.yaml"
+    update: yes
+    state: started
+  register: vmstart_result
+
+- name: K3os | Waiting 90s...
+  delegate_to: localhost
+  wait_for:
+    timeout: 90
+  when: vmstart_result.changed
+
+- name: K3os | Send keys for install command
+  delegate_to: "{{pve_host | default(groups['proxmox'][0])}}"
+  command: "pvesh set nodes/{{ pve_host }}/qemu/{{ vmid }}/sendkey --key {{ item.replace(' ', 'spc').replace('/', 'slash').replace('-', 'minus') }}"
+  with_items:
+    - "{{ 'rancher' | regex_findall('.') }}"
+    - ["kp_enter"]
+    - "{{ 'sudo mount /dev/sr1 /media/cdrom' | regex_findall('.') }}"
+    - ["kp_enter"]
+    - "{{ 'sudo k3os install' | regex_findall('.') }}"
+    - ["kp_enter", "1", "kp_enter", "y", "kp_enter"]
+    - "{{ '/media/cdrom/user-data' | regex_findall('.') }}"
+    - ["kp_enter", "y", "kp_enter"]
+  when: vmcreate_result.changed

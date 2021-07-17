@@ -1,0 +1,31 @@
+
+
+- name: K3os | Get IP Address
+  delegate_to: "{{ pve_host }}"
+  run_once: true
+  command: "pvesh get nodes/{{ pve_host }}/qemu/{{ vmid }}/agent/network-get-interfaces --output-format=json"
+  register: network
+  changed_when: false
+  retries: 10
+  delay: 10
+  until: network.rc == 0
+  tags:
+  - info
+
+- name: K3os | Find eth0
+  set_fact:
+    addresses: "{{ item['ip-addresses'] }}"
+  when: 'item.name == "eth0"'
+  run_once: true
+  loop: "{{ (network.stdout | from_json).result }}"
+  tags:
+  - info  
+
+- name: K3os | Find ipv4 address
+  set_fact:
+    ansible_host: "{{ item['ip-address'] }}"
+  when: 'item["ip-address-type"] == "ipv4"'
+  loop: "{{ addresses }}"
+  run_once: true
+  tags:
+  - info

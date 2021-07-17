@@ -1,0 +1,27 @@
+---
+# tasks file for talltechdude.proxmox_k3os
+
+- include_tasks: prereq.yaml
+  tags:
+  - always
+
+- include_tasks: delete-vm.yaml
+  when: '"clean" in ansible_run_tags'
+  tags:
+  - clean
+
+- include_tasks: cloud-config.yaml
+  tags:
+  - config
+
+- include_tasks: create-vm.yaml
+
+- include_tasks: auto-install.yaml
+
+- include_tasks: get-ip-address.yaml
+  tags:
+  - info
+
+- include_tasks: get-kubeconfig.yaml
+  tags:
+  - info

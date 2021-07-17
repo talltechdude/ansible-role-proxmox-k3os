@@ -1,0 +1,25 @@
+- name: 'K3os | Install dependencies'
+  delegate_to: localhost
+  run_once: true
+  pip:
+    name: proxmoxer
+  tags:
+  - clean  
+- name: 'K3os | Fetch Target Host'
+  set_fact:
+    pve_host: "{{ pve_host | default(groups['proxmox'][0]) }}"
+    pve_api_host: "{{ pve_api_host | default(hostvars[pve_host | default(groups['proxmox'][0])]['ansible_host']) }}"
+    pve_api_user: "{{ pve_api_user | default(hostvars[pve_host | default(groups['proxmox'][0])]['pve_api_user']) }}"
+    pve_api_password: "{{ pve_api_password | default(hostvars[pve_host | default(groups['proxmox'][0])]['pve_api_password']) }}"
+  tags:
+  - always
+
+- name: 'K3os | Krew'
+  delegate_to: localhost
+  run_once: true
+  community.general.homebrew:
+    name: krew
+    state: present
+  when: konfig
+  tags:
+  - info
