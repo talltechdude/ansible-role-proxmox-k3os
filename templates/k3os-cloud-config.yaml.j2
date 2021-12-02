@@ -25,6 +25,17 @@ write_files:
     Nameservers={{ nameservers }}
 {% endif %}
 
+{% if kube_vip and manager %}
+- path: /var/lib/rancher/k3s/server/manifests/rbac.yaml
+  content: |-
+    {{ lookup('url', 'https://kube-vip.io/manifests/rbac.yaml', split_lines=False) | indent(4, false) }} 
+
+- path: /var/lib/rancher/k3s/server/manifests/vip.yaml
+  content: |-
+    {{ lookup('pipe', "curl -sL kube-vip.io/k3s | vipAddress={{ kube_vip }} vipInterface=eth0 sh") | regex_replace('(key: node-role.kubernetes.io/master)', '\\1\n        operator: Exists\n      - key: CriticalAddonsOnly\n        operator: Exists') | indent(4, false) }}
+
+{% endif %}
+
 k3os:
   # modules:
   # - kvm
@@ -37,29 +48,44 @@ k3os:
 
   token: "{{ k3os_token }}"
 
-{% if inventory_hostname == ansible_play_hosts_all[0] %}
+{% if manager and inventory_hostname == ansible_play_hosts_all[0] %}
   # First manager node
   k3s_args:
   - server
+  - --node-external-ip={{ ansible_host }}  
+{% if (ansible_play_hosts_all | length) > 1 %}
   - --cluster-init
-  - --node-external-ip={{ ansible_host }}
-  - --tls-san={{ ansible_host }}
-  - --with-node-id
-{% elif ansible_play_hosts_all.index(inventory_hostname) < 3 %}
-  # Extra manager node
-  k3s_args:
-  - server
-  - --server=https://{{ hostvars[ansible_play_hosts_all[0]]['ansible_host'] }}:6443
-  - --with-node-id
-{% else %}
-  # Worker nodes
-  server_url: https://{{ hostvars[ansible_play_hosts_all[0]]['ansible_host'] }}:6443
-  k3s_args:
+  - --tls-san={{ kube_vip | default(ansible_host) }}
   - --with-node-id
 {% endif %}
 
-{% if (ansible_play_hosts_all | length) > 3 and ansible_play_hosts_all.index(inventory_hostname) < 3 %}
-  # More than 3 node, keep first three for control only
+{% for service in disabled_services %}
+  - --disable={{ service }}
+{% endfor %}
+  
+  # Control only
   taints:
   - CriticalAddonsOnly=true:NoExecute
+
+{% elif manager %}
+  # Extra manager node
+  k3s_args:
+  - server
+  - --server=https://{{ kube_vip | default(hostvars[ansible_play_hosts_all[0]]['ansible_host']) }}:6443
+  - --node-external-ip={{ ansible_host }}  
+  - --with-node-id
+{% for service in disabled_services %}
+  - --disable={{ service }}
+{% endfor %}
+
+  # Control only
+  taints:
+  - CriticalAddonsOnly=true:NoExecute
+
+{% else %}
+  # Worker nodes
+  server_url: https://{{ kube_vip | default(hostvars[ansible_play_hosts_all[0]]['ansible_host']) }}:6443
+  k3s_args:
+  - --with-node-id
+  - --node-external-ip={{ ansible_host }}
 {% endif %}

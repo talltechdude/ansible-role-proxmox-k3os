@@ -41,3 +41,9 @@ konfig: true
 
 # Set static IPs on each node (forces IP to ansible_host value from inventory)
 static_ip: false
+
+# Node is master control-plane, set to false (e.g. in group_vars) for worker only nodes
+manager: true
+
+# Virtual IP for cluster control plane (using kube-vip)
+kube_vip: null

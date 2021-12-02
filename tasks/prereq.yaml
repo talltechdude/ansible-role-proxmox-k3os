@@ -15,12 +15,12 @@
   tags:
     - always
 
-- name: 'K3os | Krew'
-  delegate_to: localhost
-  run_once: true
-  community.general.homebrew:
-    name: krew
-    state: present
-  when: konfig
-  tags:
-    - info
+# - name: 'K3os | Krew'
+#   delegate_to: localhost
+#   run_once: true
+#   community.general.homebrew:
+#     name: krew
+#     state: present
+#   when: konfig
+#   tags:
+#     - info
