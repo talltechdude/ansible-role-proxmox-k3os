@@ -46,6 +46,10 @@ k3os:
   labels:
     k3os.io/upgrade: enabled
 
+  ntp_servers:
+  - 0.au.pool.ntp.org
+  - 1.au.pool.ntp.org
+
   token: "{{ k3os_token }}"
 
 {% if manager and inventory_hostname == ansible_play_hosts_all[0] %}
