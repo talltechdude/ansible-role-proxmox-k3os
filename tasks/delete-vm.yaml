@@ -9,11 +9,21 @@
     proxmox_default_behavior: no_defaults
     vmid: "{{ vmid | default(omit) }}"
     state: stopped
+    force: true
   ignore_errors: true
   tags:
     - clean
+- name: 'K3os | Remove from HA'
+  delegate_to: "{{ pve_host | default(groups['proxmox'][0]) }}"
+  when: vmid is defined
+  command: "ha-manager remove vm:{{ vmid }}"
+  ignore_errors: true
+  tags:
+    - clean
+
 - name: 'K3os | Delete VM'
   delegate_to: localhost
+  throttle: 1
   community.general.proxmox_kvm:
     api_user: "{{ pve_api_user }}"
     api_password: "{{ pve_api_password }}"

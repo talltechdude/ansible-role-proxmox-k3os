@@ -1,0 +1,5 @@
+
+- name: K3os | Add to HA Group
+  delegate_to: "{{ pve_host | default(groups['proxmox'][0]) }}"
+  when: vmid is defined
+  command: "ha-manager add vm:{{ vmid }} --group prefer-{{ pve_host }}"

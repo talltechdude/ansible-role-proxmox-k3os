@@ -13,6 +13,7 @@
       ide0: "{{ templates }}:iso/{{ k3os_iso }}.iso,media=cdrom"
       ide2: "{{ storage }}:cloudinit,format=qcow2"
 
+    onboot: yes
     sockets: "{{ sockets }}"
     memory: "{{ memory }}"
     scsihw: virtio-scsi-pci

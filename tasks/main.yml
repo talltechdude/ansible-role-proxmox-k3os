@@ -14,9 +14,13 @@
   tags:
   - config
 
+- include_tasks: create-pool.yaml
+
 - include_tasks: create-vm.yaml
 
 - include_tasks: auto-install.yaml
+
+- include_tasks: add-to-ha.yaml
 
 - include_tasks: get-ip-address.yaml
   tags:

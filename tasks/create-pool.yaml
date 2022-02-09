@@ -1,0 +1,8 @@
+- name: K3os | Create Pool
+  delegate_to: "{{ pve_host }}"
+  run_once: true
+  command: "pvesh create /pools --poolid \"{{ pool }}\" --comment \"{{ pool }}\""
+  ignore_errors: true
+  register: result_create_pool
+  changed_when: "'create pool failed' not in result_create_pool.stderr"
+  when: pool is defined
