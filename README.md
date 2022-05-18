@@ -59,9 +59,31 @@ Dependencies
 
 N/A
 
-Example Playbook
+Examples
 ----------------
 
+### Hosts file
+```
+[proxmox]
+pve-01 ansible_host=10.0.0.31
+pve-02 ansible_host=10.0.0.32
+pve-03 ansible_host=10.0.0.33
+
+[k3os_managers]
+k3os-manager-01 ansible_host=10.0.0.11 pve_host=pve-01 vmid=701
+k3os-manager-02 ansible_host=10.0.0.12 pve_host=pve-02 vmid=702
+k3os-manager-03 ansible_host=10.0.0.13 pve_host=pve-03 vmid=703
+
+[k3os_workers]
+# Auto numbering worker nodes - use e.g. 01:06 for 01, 02, 03, 04, 05, 06
+k3os-[01:06] node_number="{{ inventory_hostname | regex_replace(\"^k3os-(\\d+)$\", \"\\1\") | int }}" ansible_host="10.0.0.{{ 20 + node_number | int }}" pve_host="{{ groups.proxmox[(node_number | int - 1) % (groups.proxmox | length)] }}" vmid="{{ node_number | int + 750 }}"
+
+[k3os:children]
+k3os_managers
+k3os_workers
+```
+
+### Playbook
 ```
 - name: 'K3os | Install'
   hosts: k3os
